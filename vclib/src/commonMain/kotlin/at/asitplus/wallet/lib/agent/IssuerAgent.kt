@@ -85,9 +85,10 @@ class IssuerAgent(
     override suspend fun issueCredentialWithTypes(
         subjectId: String,
         subjectPublicKey: CoseKey?,
-        attributeTypes: Collection<String>
+        attributeTypes: Collection<String>,
+        additionalData: Map<String, String>
     ): Issuer.IssuedCredentialResult {
-        val result = dataProvider.getCredentialWithType(subjectId, subjectPublicKey, attributeTypes)
+        val result = dataProvider.getCredentialWithType(subjectId, subjectPublicKey, attributeTypes, additionalData)
         result.exceptionOrNull()?.let { failure ->
             return Issuer.IssuedCredentialResult(failed = attributeTypes.map { Issuer.FailedAttribute(it, failure) })
         }

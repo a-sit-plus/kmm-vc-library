@@ -49,6 +49,9 @@ data class CredentialRequestParameters(
     @SerialName("claims")
     val claims: Map<String, Map<String, RequestedCredentialClaimSpecification>>? = null,
 
+    @SerialName("additionalData")
+    val additionalData: Map<String, String> = emptyMap(),
+
     /**
      * OID4VCI:
      * OPTIONAL. JSON object containing proof of possession of the key material the issued Credential shall be bound to.
@@ -69,6 +72,7 @@ data class CredentialRequestParameters(
         if (!types.contentEquals(other.types)) return false
         if (docType != other.docType) return false
         if (claims != other.claims) return false
+        if (additionalData != other.additionalData) return false
         return proof == other.proof
     }
 
@@ -77,6 +81,7 @@ data class CredentialRequestParameters(
         result = 31 * result + types.contentHashCode()
         result = 31 * result + (docType?.hashCode() ?: 0)
         result = 31 * result + (claims?.hashCode() ?: 0)
+        result = 31 * result + (additionalData?.hashCode() ?: 0)
         result = 31 * result + (proof?.hashCode() ?: 0)
         return result
     }

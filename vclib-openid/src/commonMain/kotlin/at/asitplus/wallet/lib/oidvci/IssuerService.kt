@@ -158,7 +158,8 @@ class IssuerService(
                 CoseEllipticCurve.P256,
                 subjectPublicKey.toAnsiX963ByteArray().getOrThrow()
             ),
-            attributeTypes = params.types.toList()
+            attributeTypes = params.types.toList(),
+            additionalData = params.additionalData
         )
         if (issuedCredentialResult.successful.isEmpty()) {
             throw OAuth2Exception(Errors.INVALID_REQUEST)

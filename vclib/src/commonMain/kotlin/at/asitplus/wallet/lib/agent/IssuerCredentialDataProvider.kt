@@ -19,7 +19,8 @@ interface IssuerCredentialDataProvider {
     fun getCredentialWithType(
         subjectId: String,
         subjectPublicKey: CoseKey? = null,
-        attributeTypes: Collection<String>
+        attributeTypes: Collection<String>,
+        additionalData: Map<String, String> = emptyMap()
     ): KmmResult<List<CredentialToBeIssued>>
 
 }
