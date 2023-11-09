@@ -1,5 +1,8 @@
 # Changelog
 
+Release 1.7.3:
+ - Fix encoding of URL parameters for OIDC SIOPv2
+
 Release 1.7.2:
  - Refactor `LibraryInitializer.registerExtensionLibrary`, see Readme
 

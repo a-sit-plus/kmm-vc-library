@@ -1,6 +1,6 @@
 object Versions {
-    const val kotlin = "1.8.0"
-    const val `serialization-json` = "1.4.1"
+    const val kotlin = "1.8.21"
+    const val `serialization-json` = "1.5.1"
     const val datetime = "0.4.0"
     const val kotest = "5.5.4"
     const val coroutines = "1.6.4"
