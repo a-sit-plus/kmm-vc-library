@@ -1,4 +1,4 @@
-name: Publish
+name: Publish to Sonatype Test Run
 on: workflow_dispatch
 permissions:
   contents: read
@@ -17,33 +17,10 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - name: Publish to Sonatype
-        run: ./gradlew clean publishToSonatype closeSonatypeStagingRepository
+        run: ./gradlew clean publishToSonatype
         env:
           ORG_GRADLE_PROJECT_signingKeyId: ${{ secrets.PUBLISH_SIGNING_KEYID }}
           ORG_GRADLE_PROJECT_signingKey: ${{ secrets.PUBLISH_SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.PUBLISH_SIGNING_PASSWORD }}
           ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.PUBLISH_SONATYPE_USER }}
           ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.PUBLISH_SONATYPE_PASSWORD }}
-  deploy-docs:
-    needs: build
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
-      - name: Build Dokka HTML
-        run: ./gradlew dokkaHtmlMultiModule
-      - name: Setup Pages
-        uses: actions/configure-pages@v3
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
-        with:
-          # Upload docs folder
-          path: './build/dokka'
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v2
