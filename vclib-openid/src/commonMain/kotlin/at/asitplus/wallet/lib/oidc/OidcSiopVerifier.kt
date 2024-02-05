@@ -37,8 +37,7 @@ import at.asitplus.wallet.lib.oidvci.decodeFromUrlQuery
 import at.asitplus.wallet.lib.oidvci.encodeToParameters
 import com.benasher44.uuid.uuid4
 import io.github.aakira.napier.Napier
-import io.ktor.http.URLBuilder
-import io.ktor.http.Url
+import io.ktor.http.*
 import kotlinx.datetime.Clock
 import kotlinx.serialization.encodeToString
 import kotlin.time.DurationUnit
@@ -93,6 +92,9 @@ class OidcSiopVerifier(
             requestedAttributes = requestedAttributes,
         )
     }
+
+    fun getCredentialPresentation() = credentialRepresentation
+    fun getRelyingPartyUrl() = relyingPartyUrl
 
     /**
      * Creates an OIDC Authentication Request, encoded as query parameters to the [walletUrl].
@@ -264,7 +266,7 @@ class OidcSiopVerifier(
         data class SuccessSdJwt(
             val sdJwt: VerifiableCredentialSdJwt,
             val disclosures: List<SelectiveDisclosureItem>,
-            val state: String?
+            val state: String?,
         ) : AuthnResponseResult()
 
         /**

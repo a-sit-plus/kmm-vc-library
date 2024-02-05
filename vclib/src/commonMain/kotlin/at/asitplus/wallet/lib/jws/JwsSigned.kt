@@ -42,15 +42,15 @@ data class JwsSigned(
     companion object {
         fun parse(input: String): JwsSigned? {
             val stringList = input.replace("[^A-Za-z0-9-_.]".toRegex(), "").split(".")
-            if (stringList.size != 3) return null.also { Napier.w("Could not parse JWS: $input") }
+            if (stringList.size != 3) return null.also { Napier.w("Could not parse JWS 1: $input") }
             val headerInput = stringList[0].decodeToByteArrayOrNull(Base64Strict)
-                ?: return null.also { Napier.w("Could not parse JWS: $input") }
+                ?: return null.also { Napier.w("Could not parse JWS 2: $input") }
             val header = JwsHeader.deserialize(headerInput.decodeToString())
-                ?: return null.also { Napier.w("Could not parse JWS: $input") }
+                ?: return null.also { Napier.w("Could not parse JWS 3: $input") }
             val payload = stringList[1].decodeToByteArrayOrNull(Base64Strict)
-                ?: return null.also { Napier.w("Could not parse JWS: $input") }
+                ?: return null.also { Napier.w("Could not parse JWS 4: $input") }
             val signature = stringList[2].decodeToByteArrayOrNull(Base64Strict)
-                ?: return null.also { Napier.w("Could not parse JWS: $input") }
+                ?: return null.also { Napier.w("Could not parse JWS 5: $input") }
             return JwsSigned(header, payload, signature, "${stringList[0]}.${stringList[1]}")
         }
     }
