@@ -32,7 +32,9 @@ object AttributeIndex {
      */
     fun resolveIsoNamespace(namespace: String): ConstantIndex.CredentialScheme? {
         // allow for extension to the namespace by appending ".countryname" or anything else, according to spec
-        return schemeSet.firstOrNull { it.isoNamespace.startsWith(namespace) || namespace.startsWith(it.isoNamespace) }
+        return schemeSet.firstOrNull {
+            it.isoNamespace?.let { it.startsWith(namespace) || namespace.startsWith(it) } ?: false
+        }
     }
 
 }

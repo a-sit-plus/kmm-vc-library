@@ -44,9 +44,7 @@ import at.asitplus.wallet.lib.oidvci.decodeFromUrlQuery
 import at.asitplus.wallet.lib.oidvci.encodeToParameters
 import com.benasher44.uuid.uuid4
 import io.github.aakira.napier.Napier
-import io.ktor.http.URLBuilder
-import io.ktor.http.Url
-import io.ktor.http.quote
+import io.ktor.http.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Clock
@@ -375,6 +373,7 @@ class OidcSiopVerifier(
          * Successfully decoded and validated the response from the Wallet (W3C credential in SD-JWT)
          */
         data class SuccessSdJwt(
+            val jwsSigned: JwsSigned,
             val sdJwt: VerifiableCredentialSdJwt,
             val disclosures: List<SelectiveDisclosureItem>,
             val state: String?,
@@ -549,11 +548,11 @@ class OidcSiopVerifier(
 
                 is Verifier.VerifyPresentationResult.SuccessSdJwt ->
                     AuthnResponseResult.SuccessSdJwt(
-                        result.sdJwt,
-                        result.disclosures,
-                        params.state
-                    )
-                        .also { Napier.i("VP success: $result") }
+                        jwsSigned = result.jwsSigned,
+                        sdJwt = result.sdJwt,
+                        disclosures = result.disclosures,
+                        state = params.state
+                    ).also { Napier.i("VP success: $result") }
             }
         }
 

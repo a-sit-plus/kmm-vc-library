@@ -19,38 +19,54 @@ object ConstantIndex {
         val schemaUri: String
 
         /**
-         * Name of the subclass of [CredentialSubject] and thus the `type` of the credential.
+         * Name of the subclass of [CredentialSubject] and thus the `type` of the credential when using
+         * [CredentialRepresentation.PLAIN_JWT].
          */
         val vcType: String
 
         /**
-         * Namespace to use for attributes of this credential type.
+         * Type for [CredentialRepresentation.SD_JWT] credentials, used in `vct`.
+         */
+        val sdJwtType: String?
+            get() = null
+
+        /**
+         * Namespace to use for attributes of this credential type, when using [CredentialRepresentation.ISO_MDOC]
          *
          * From ISO/IEC 18013-5:
          * There is no requirement for the `NameSpace` format. An approach to avoid collisions is to use the
          * following general format: `[Reverse Domain].[Domain Specific Extension]`.
          */
-        val isoNamespace: String
+        val isoNamespace: String?
+            get() = null
 
         /**
-         * ISO DocType to use for attributes of this credential type.
+         * ISO DocType to use for attributes of this credential type, when using [CredentialRepresentation.ISO_MDOC]
          *
          * From ISO/IEC 18013-5:
          * There is no requirement for the `DocType` format. An approach to avoid collisions is to use the
          * following general format: `[Reverse Domain].[Domain Specific Extension]`.
          */
-        val isoDocType: String
+        val isoDocType: String?
+            get() = null
 
         /**
-         * List of claims that may be issued separately when requested in format [CredentialRepresentation.SD_JWT]
+         * List of claims that may be issued separately when using [CredentialRepresentation.SD_JWT]
          * or [CredentialRepresentation.ISO_MDOC].
          */
         val claimNames: Collection<String>
+
+        /**
+         * Collection of [CredentialRepresentation] that are supported by this credential scheme.
+         */
+        val supportedRepresentations: Collection<CredentialRepresentation>
+            get() = CredentialRepresentation.entries
     }
 
     object AtomicAttribute2023 : CredentialScheme {
         override val schemaUri: String = "https://wallet.a-sit.at/schemas/1.0.0/AtomicAttribute2023.json"
         override val vcType: String = "AtomicAttribute2023"
+        override val sdJwtType: String = "https://wallet.a-sit.at/atomic-attribute-2023"
         override val isoNamespace: String = "at.a-sit.wallet.atomic-attribute-2023"
         override val isoDocType: String = "at.a-sit.wallet.atomic-attribute-2023.iso"
         override val claimNames: Collection<String> = listOf()

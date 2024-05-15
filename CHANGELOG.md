@@ -1,5 +1,9 @@
 # Changelog
 
+Release NEXT-NEXT:
+ - Extend interface `CredentialScheme` to be able to specify supported representations, and the `vct` claim for SD-JWTs
+ - Refactor `VerifiableCredentialSdJwt` to contain changes from draft 03 of SD-JWT for VC
+
 Release NEXT:
  - Change usage of `OidcUserInfo` in interfaces to `OidcUserInfoExtended`, to also deserialize unknown properties
  - OID4VCI: `WalletService`: Replace parameters containing whole authentication parameters with single parameters holding `code` and `state`

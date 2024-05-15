@@ -10,36 +10,45 @@ import at.asitplus.wallet.lib.oidc.OpenIdConstants
 import at.asitplus.wallet.lib.oidvci.mdl.RequestedCredentialClaimSpecification
 import io.matthewnelson.encoding.core.Encoder.Companion.encodeToString
 
-fun ConstantIndex.CredentialScheme.toSupportedCredentialFormat(cryptoAlgorithms: Set<CryptoAlgorithm>) = mapOf(
-    this.isoNamespace to SupportedCredentialFormat.forIsoMdoc(
-        format = CredentialFormatEnum.MSO_MDOC,
-        scope = vcType,
-        docType = isoDocType,
-        supportedBindingMethods = setOf(OpenIdConstants.BINDING_METHOD_COSE_KEY),
-        supportedSigningAlgorithms = cryptoAlgorithms.map { it.toJwsAlgorithm().identifier }.toSet(),
-        isoClaims = mapOf(
-            isoNamespace to claimNames.associateWith { RequestedCredentialClaimSpecification() }
+fun ConstantIndex.CredentialScheme.toSupportedCredentialFormat(cryptoAlgorithms: Set<CryptoAlgorithm>)
+        : Map<String, SupportedCredentialFormat> {
+    val map = mutableMapOf<String, SupportedCredentialFormat>()
+    if (this.isoNamespace != null && isoDocType != null) {
+        map += this.isoNamespace!! to SupportedCredentialFormat.forIsoMdoc(
+            format = CredentialFormatEnum.MSO_MDOC,
+            scope = vcType,
+            docType = isoDocType!!,
+            supportedBindingMethods = setOf(OpenIdConstants.BINDING_METHOD_COSE_KEY),
+            supportedSigningAlgorithms = cryptoAlgorithms.map { it.toJwsAlgorithm().identifier }.toSet(),
+            isoClaims = mapOf(
+                isoNamespace!! to claimNames.associateWith { RequestedCredentialClaimSpecification() }
+            )
         )
-    ),
-    encodeToCredentialIdentifier(CredentialFormatEnum.JWT_VC) to SupportedCredentialFormat.forVcJwt(
-        format = CredentialFormatEnum.JWT_VC,
-        scope = vcType,
-        credentialDefinition = SupportedCredentialFormatDefinition(
-            types = listOf(VcDataModelConstants.VERIFIABLE_CREDENTIAL, vcType),
-            credentialSubject = claimNames.associateWith { CredentialSubjectMetadataSingle() }
-        ),
-        supportedBindingMethods = setOf(OpenIdConstants.PREFIX_DID_KEY, OpenIdConstants.URN_TYPE_JWK_THUMBPRINT),
-        supportedSigningAlgorithms = cryptoAlgorithms.map { it.toJwsAlgorithm().identifier }.toSet(),
-    ),
-    encodeToCredentialIdentifier(CredentialFormatEnum.VC_SD_JWT) to SupportedCredentialFormat.forSdJwt(
-        format = CredentialFormatEnum.VC_SD_JWT,
-        scope = vcType,
-        sdJwtVcType = vcType,
-        supportedBindingMethods = setOf(OpenIdConstants.PREFIX_DID_KEY, OpenIdConstants.URN_TYPE_JWK_THUMBPRINT),
-        supportedSigningAlgorithms = cryptoAlgorithms.map { it.toJwsAlgorithm().identifier }.toSet(),
-        sdJwtClaims = claimNames.associateWith { RequestedCredentialClaimSpecification() }
-    )
-)
+    }
+    if (supportedRepresentations.contains(ConstantIndex.CredentialRepresentation.PLAIN_JWT)) {
+        map += encodeToCredentialIdentifier(CredentialFormatEnum.JWT_VC) to SupportedCredentialFormat.forVcJwt(
+            format = CredentialFormatEnum.JWT_VC,
+            scope = vcType,
+            credentialDefinition = SupportedCredentialFormatDefinition(
+                types = listOf(VcDataModelConstants.VERIFIABLE_CREDENTIAL, vcType),
+                credentialSubject = claimNames.associateWith { CredentialSubjectMetadataSingle() }
+            ),
+            supportedBindingMethods = setOf(OpenIdConstants.PREFIX_DID_KEY, OpenIdConstants.URN_TYPE_JWK_THUMBPRINT),
+            supportedSigningAlgorithms = cryptoAlgorithms.map { it.toJwsAlgorithm().identifier }.toSet(),
+        )
+    }
+    if (supportedRepresentations.contains(ConstantIndex.CredentialRepresentation.SD_JWT)) {
+        map += encodeToCredentialIdentifier(CredentialFormatEnum.VC_SD_JWT) to SupportedCredentialFormat.forSdJwt(
+            format = CredentialFormatEnum.VC_SD_JWT,
+            scope = vcType,
+            sdJwtVcType = vcType,
+            supportedBindingMethods = setOf(OpenIdConstants.PREFIX_DID_KEY, OpenIdConstants.URN_TYPE_JWK_THUMBPRINT),
+            supportedSigningAlgorithms = cryptoAlgorithms.map { it.toJwsAlgorithm().identifier }.toSet(),
+            sdJwtClaims = claimNames.associateWith { RequestedCredentialClaimSpecification() }
+        )
+    }
+    return map
+}
 
 /**
  * Reverse functionality of [decodeFromCredentialIdentifier]
