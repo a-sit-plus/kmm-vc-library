@@ -29,9 +29,8 @@ import at.asitplus.wallet.lib.oidvci.decodeFromUrlQuery
 import at.asitplus.wallet.lib.oidvci.encodeToParameters
 import at.asitplus.wallet.lib.oidvci.formUrlEncode
 import io.github.aakira.napier.Napier
-import io.ktor.http.URLBuilder
-import io.ktor.http.Url
-import io.ktor.util.flattenEntries
+import io.ktor.http.*
+import io.ktor.util.*
 import io.matthewnelson.encoding.base16.Base16
 import io.matthewnelson.encoding.core.Encoder.Companion.encodeToString
 import kotlinx.datetime.Clock
@@ -139,10 +138,7 @@ class OidcSiopWallet(
             .also { Napier.w("Could not parse authentication request: $input") }
 
         val extractedParams = parsedParams.let { extractRequestObject(it) ?: it }
-        if (parsedParams.clientId != null && extractedParams.clientId != parsedParams.clientId) {
-            return KmmResult.failure<AuthenticationRequestParameters>(OAuth2Exception(Errors.INVALID_REQUEST))
-                .also { Napier.w("ClientIds changed: ${parsedParams.clientId} to ${extractedParams.clientId}") }
-        }
+            .also { Napier.i("parsed authentication request: $it") }
         return KmmResult.success(extractedParams)
     }
 

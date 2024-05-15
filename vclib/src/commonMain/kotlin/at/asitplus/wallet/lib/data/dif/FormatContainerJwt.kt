@@ -9,6 +9,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class FormatContainerJwt(
+    // TODO make this a collection of future Json Web Algorithms?
     @SerialName("alg")
     val algorithms: Collection<String>? = null,
 )
