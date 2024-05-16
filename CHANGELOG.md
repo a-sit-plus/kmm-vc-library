@@ -1,14 +1,7 @@
 # Changelog
 
-Release 1.8.0:
- - Remove `JwsContentType`, replace with strings from `JwsContentTypeConstants`
- - Add `JsonWebToken` to use as payload in `JwsHeader` or others
- - Change type of `exp` and `nbf` in `JwsHeader` from `long` to `Instant`
- - Remove all references to "attribute names" in credential subjects, we'll only use types from now on, as in the [W3C VC Data Model](https://w3c.github.io/vc-data-model/#types), e.g. deprecate the usage of methods referencing attribute names
- - Rename `keyId` to `identifier` (calculated from the Json Web Key) in `CryptoService` to decouple identifiers in VC from keyIds
- - Add `identifier` to `Holder`, `Verifier`, `Issuer`, which is by default the `identifier` of the `CryptoService`, i.e. typically the `keyId`
- - Move `extractPublicKeyFromX509Cert` from interface `VerifierCryptoService` (with expected implementations) to expected object `CryptoUtils`
- - Migrate usages of `keyId` to a more general concept of keys in `getKey()` in classes `JwsHeader` and `JweHeader`
+Release 1.7.3:
+ - Upgrade conventions plugin
 
 Release 1.7.2:
  - Refactor `LibraryInitializer.registerExtensionLibrary`, see Readme
