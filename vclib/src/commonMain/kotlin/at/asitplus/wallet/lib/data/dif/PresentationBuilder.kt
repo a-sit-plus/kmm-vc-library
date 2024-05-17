@@ -9,8 +9,8 @@ class PresentationBuilder(
 ) {
     private var currentSelection: Set<HolderAgent.CandidateInputMatchContainer> = setOf()
 
-    val propositionalFormula =
-        presentationPreparationHelper.submissionRequirements?.let { requirements ->
+    val propositionalFormulaOverInputDescriptors: PropositionalFormula<String>
+        get() = presentationPreparationHelper.submissionRequirements?.let { requirements ->
             PropositionalFormula.And(
                 requirements.map { requirement ->
                     requirement.toPropositionalFormulaOverInputDescriptors(
@@ -23,6 +23,10 @@ class PresentationBuilder(
                 PropositionalFormula.Atom(it)
             }
         )
+
+    init {
+        // check formula for satisfiability
+    }
 
     // val satSolver
 

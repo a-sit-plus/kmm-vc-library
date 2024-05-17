@@ -7,44 +7,38 @@ import at.asitplus.wallet.lib.data.dif.SubmissionRequirementRuleEnum
 fun SubmissionRequirement.toPropositionalFormulaOverInputDescriptors(inputDescriptorGroups: Map<String, String>): PropositionalFormula<String> {
     return when (rule) {
         SubmissionRequirementRuleEnum.ALL -> when {
-            from != null -> {
-                PropositionalFormula.And(
-                    inputDescriptorGroups.filter {
-                        it.value == from
-                    }.map {
-                        PropositionalFormula.Atom(it.key)
-                    }
-                )
-            }
-
-            fromNested != null -> {
-                PropositionalFormula.And(
-                    fromNested.map {
-                        it.toPropositionalFormulaOverInputDescriptors(
-                            inputDescriptorGroups
-                        )
-                    }
-                )
-            }
-
-            else -> TODO()
-        }
-
-        SubmissionRequirementRuleEnum.PICK -> when {
-            from != null -> {
+            from != null -> PropositionalFormula.And(
                 inputDescriptorGroups.filter {
                     it.value == from
                 }.map {
                     PropositionalFormula.Atom(it.key)
                 }
-            }
+            )
 
-            fromNested != null -> {
+
+            fromNested != null -> PropositionalFormula.And(
                 fromNested.map {
                     it.toPropositionalFormulaOverInputDescriptors(
                         inputDescriptorGroups
                     )
                 }
+            )
+
+            else -> TODO()
+        }
+
+        SubmissionRequirementRuleEnum.PICK -> when {
+            from != null -> inputDescriptorGroups.filter {
+                it.value == from
+            }.map {
+                PropositionalFormula.Atom(it.key)
+            }
+
+
+            fromNested != null -> fromNested.map {
+                it.toPropositionalFormulaOverInputDescriptors(
+                    inputDescriptorGroups
+                )
             }
 
             else -> TODO()
@@ -54,24 +48,32 @@ fun SubmissionRequirement.toPropositionalFormulaOverInputDescriptors(inputDescri
                     this.count?.let { count ->
                         PropositionalFormula.Or(
                             childFormulas.combinations(count).map {
-                                PropositionalFormula.And(it)
+                                PropositionalFormula.And(
+                                    PropositionalFormula.And(it),
+                                    PropositionalFormula.And((childFormulas - it).map {
+                                        PropositionalFormula.Not(it)
+                                    })
+                                )
                             }
                         )
                     },
                     this.min?.let { min ->
                         PropositionalFormula.Or(
-                            (min..childFormulas.size).flatMap { count ->
-                                childFormulas.combinations(count).map {
-                                    PropositionalFormula.And(it)
-                                }
+                            childFormulas.combinations(min).map {
+                                PropositionalFormula.And(it)
                             }
                         )
                     },
                     this.max?.let {
                         PropositionalFormula.Or(
-                            (0 .. max).flatMap { count ->
+                            (0..max).flatMap { count ->
                                 childFormulas.combinations(count).map {
-                                    PropositionalFormula.And(it)
+                                    PropositionalFormula.And(
+                                        PropositionalFormula.And(it),
+                                        PropositionalFormula.And((childFormulas - it).map {
+                                            PropositionalFormula.Not(it)
+                                        }),
+                                    )
                                 }
                             }
                         )
