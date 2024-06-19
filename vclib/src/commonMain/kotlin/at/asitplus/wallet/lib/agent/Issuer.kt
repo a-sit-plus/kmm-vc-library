@@ -1,6 +1,6 @@
 package at.asitplus.wallet.lib.agent
 
-import at.asitplus.crypto.datatypes.CryptoAlgorithm
+import at.asitplus.crypto.datatypes.SignatureAlgorithm
 import at.asitplus.crypto.datatypes.CryptoPublicKey
 import at.asitplus.wallet.lib.data.ConstantIndex
 import at.asitplus.wallet.lib.iso.IssuerSigned
@@ -68,7 +68,7 @@ interface Issuer {
      * The cryptographic algorithms supported by this issuer, i.e. the ones from its cryptographic service,
      * used to sign credentials.
      */
-    val cryptoAlgorithms: Set<CryptoAlgorithm>
+    val cryptoAlgorithms: Set<SignatureAlgorithm>
 
     // TODO Extract to pass credential scheme only!
     /**

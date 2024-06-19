@@ -17,6 +17,7 @@ inline fun Project.commonApiDependencies(): List<String> {
         coroutines(),
         serialization("json"),
         serialization("cbor"),
+        addDependency("at.asitplus.crypto:provider", "kmpcrypto"), //for iOS Export
         addDependency("at.asitplus.crypto:datatypes", "kmpcrypto"), //for iOS Export
         addDependency("at.asitplus.crypto:datatypes-cose", "kmpcrypto"),
         addDependency("at.asitplus.crypto:datatypes-jws", "kmpcrypto"),

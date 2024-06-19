@@ -5,11 +5,16 @@ package at.asitplus.wallet.lib.agent
 import at.asitplus.KmmResult
 import at.asitplus.crypto.datatypes.*
 import at.asitplus.crypto.datatypes.cose.CoseKey
+import at.asitplus.crypto.datatypes.cose.toCoseAlgorithm
+import at.asitplus.crypto.datatypes.cose.toCoseKey
 import at.asitplus.crypto.datatypes.jws.JsonWebKey
 import at.asitplus.crypto.datatypes.jws.JweAlgorithm
 import at.asitplus.crypto.datatypes.jws.JweEncryption
+import at.asitplus.crypto.datatypes.jws.toJsonWebKey
 import at.asitplus.crypto.datatypes.pki.X509Certificate
 import at.asitplus.crypto.datatypes.pki.X509CertificateExtension
+import at.asitplus.crypto.provider.sign.platformVerifierFor
+import at.asitplus.crypto.provider.sign.verify
 
 interface CryptoService {
 
@@ -21,7 +26,7 @@ interface CryptoService {
                     is CryptoSignature.EC.IndefiniteLength -> it.withCurve((publicKey as CryptoPublicKey.EC).curve)
                 }
             }
-    }
+        }
 
     suspend fun doSign(input: ByteArray): KmmResult<CryptoSignature>
 
@@ -54,13 +59,13 @@ interface CryptoService {
 
     fun messageDigest(input: ByteArray, digest: Digest): KmmResult<ByteArray>
 
-    val algorithm: CryptoAlgorithm
+    val algorithm: SignatureAlgorithm
 
     val publicKey: CryptoPublicKey
 
-    val jsonWebKey: JsonWebKey
+    val jsonWebKey: JsonWebKey  get() = publicKey.toJsonWebKey()
 
-    val coseKey: CoseKey
+    val coseKey: CoseKey get() = publicKey.toCoseKey(algorithm.toCoseAlgorithm().getOrThrow()).getOrNull()!!
 
     /**
      * May be used in [at.asitplus.wallet.lib.cbor.CoseService] to transport the signing key for a COSE structure.
@@ -75,14 +80,20 @@ interface VerifierCryptoService {
     /**
      * List of algorithms, for which signatures can be verified in [verify].
      */
-    val supportedAlgorithms: List<CryptoAlgorithm>
+    val supportedAlgorithms: List<SignatureAlgorithm>
+        get() = listOf(
+            SignatureAlgorithm.ECDSAwithSHA256,
+            SignatureAlgorithm.ECDSAwithSHA384,
+            SignatureAlgorithm.ECDSAwithSHA512
+        )
 
     fun verify(
         input: ByteArray,
         signature: CryptoSignature,
-        algorithm: CryptoAlgorithm,
+        algorithm: SignatureAlgorithm,
         publicKey: CryptoPublicKey,
-    ): KmmResult<Boolean>
+    ): KmmResult<Boolean> =
+        algorithm.platformVerifierFor(publicKey).map { it.verify(input, signature); true }
 
 }
 
@@ -147,10 +158,8 @@ expect class DefaultCryptoService() : CryptoService {
         digest: Digest
     ): KmmResult<ByteArray>
 
-    override val algorithm: CryptoAlgorithm
+    override val algorithm: SignatureAlgorithm
     override val publicKey: CryptoPublicKey
-    override val jsonWebKey: JsonWebKey
-    override val coseKey: CoseKey
     override val certificate: X509Certificate?
 
     companion object {
@@ -160,12 +169,4 @@ expect class DefaultCryptoService() : CryptoService {
     }
 }
 
-expect class DefaultVerifierCryptoService() : VerifierCryptoService {
-    override val supportedAlgorithms: List<CryptoAlgorithm>
-    override fun verify(
-        input: ByteArray,
-        signature: CryptoSignature,
-        algorithm: CryptoAlgorithm,
-        publicKey: CryptoPublicKey
-    ): KmmResult<Boolean>
-}
+expect class DefaultVerifierCryptoService() : VerifierCryptoService

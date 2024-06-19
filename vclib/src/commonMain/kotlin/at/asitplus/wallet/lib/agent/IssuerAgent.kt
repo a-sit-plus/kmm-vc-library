@@ -1,6 +1,6 @@
 package at.asitplus.wallet.lib.agent
 
-import at.asitplus.crypto.datatypes.CryptoAlgorithm
+import at.asitplus.crypto.datatypes.SignatureAlgorithm
 import at.asitplus.crypto.datatypes.CryptoPublicKey
 import at.asitplus.crypto.datatypes.cose.toCoseKey
 import at.asitplus.crypto.datatypes.io.Base64Strict
@@ -54,7 +54,7 @@ class IssuerAgent(
     private val coseService: CoseService,
     private val clock: Clock = Clock.System,
     override val publicKey: CryptoPublicKey,
-    override val cryptoAlgorithms: Set<CryptoAlgorithm>,
+    override val cryptoAlgorithms: Set<SignatureAlgorithm>,
     private val timePeriodProvider: TimePeriodProvider = FixedTimePeriodProvider,
 ) : Issuer {
 
