@@ -314,7 +314,7 @@ class OidcSiopProtocolTest : FreeSpec({
             requestObjectJwsVerifier = verifierAttestationVerifier(DefaultCryptoService().jsonWebKey)
         )
         shouldThrow<OAuth2Exception> {
-            holderSiop.createAuthnResponse(authnRequestWithRequestObject).getOrThrow()
+            holderSiop.createAuthnResponse(authnRequestWithRequestObject).also { println(it) }.getOrThrow()
         }
     }
 
@@ -414,7 +414,7 @@ private suspend fun buildAttestationJwt(
     verifierCryptoService: CryptoService
 ): JwsSigned = DefaultJwsService(sprsCryptoService).createSignedJws(
     header = JwsHeader(
-        algorithm = sprsCryptoService.algorithm.toJwsAlgorithm(),
+        algorithm = sprsCryptoService.algorithm.toJwsAlgorithm().getOrThrow(),
     ),
     payload = JsonWebToken(
         issuer = "sprs", // allows Wallet to determine the issuer's key
