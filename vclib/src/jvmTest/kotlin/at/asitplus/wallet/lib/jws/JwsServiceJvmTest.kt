@@ -3,31 +3,12 @@ package at.asitplus.wallet.lib.jws
 import at.asitplus.crypto.datatypes.Digest
 import at.asitplus.crypto.datatypes.SignatureAlgorithm
 import at.asitplus.crypto.datatypes.io.Base64UrlStrict
-import at.asitplus.crypto.datatypes.jws.JweAlgorithm
-import at.asitplus.crypto.datatypes.jws.JweEncrypted
-import at.asitplus.crypto.datatypes.jws.JweEncryption
-import at.asitplus.crypto.datatypes.jws.JwsSigned
-import at.asitplus.crypto.datatypes.jws.toJwsAlgorithm
+import at.asitplus.crypto.datatypes.jws.*
 import at.asitplus.wallet.lib.agent.DefaultCryptoService
 import at.asitplus.wallet.lib.data.jsonSerializer
 import com.benasher44.uuid.uuid4
-import com.nimbusds.jose.EncryptionMethod
-import com.nimbusds.jose.JOSEObjectType
-import com.nimbusds.jose.JWEAlgorithm
-import com.nimbusds.jose.JWEHeader
-import com.nimbusds.jose.JWEObject
-import com.nimbusds.jose.JWSAlgorithm
-import com.nimbusds.jose.JWSHeader
-import com.nimbusds.jose.JWSObject
-import com.nimbusds.jose.Payload
-import com.nimbusds.jose.crypto.ECDHDecrypter
-import com.nimbusds.jose.crypto.ECDHEncrypter
-import com.nimbusds.jose.crypto.ECDSASigner
-import com.nimbusds.jose.crypto.ECDSAVerifier
-import com.nimbusds.jose.crypto.RSADecrypter
-import com.nimbusds.jose.crypto.RSAEncrypter
-import com.nimbusds.jose.crypto.RSASSASigner
-import com.nimbusds.jose.crypto.RSASSAVerifier
+import com.nimbusds.jose.*
+import com.nimbusds.jose.crypto.*
 import com.nimbusds.jose.jwk.JWK
 import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.FreeSpec
@@ -89,13 +70,13 @@ class JwsServiceJvmTest : FreeSpec({
 
             val jweAlgorithm = when (algo) {
                 is SignatureAlgorithm.ECDSA -> JweAlgorithm.ECDH_ES
-                else -> when (algo.digest) {
+                is SignatureAlgorithm.RSA -> when (algo.digest) {
                     Digest.SHA256 -> JweAlgorithm.RSA_OAEP_256
                     Digest.SHA384 -> JweAlgorithm.RSA_OAEP_384
                     Digest.SHA512 -> JweAlgorithm.RSA_OAEP_512
                     else -> throw IllegalArgumentException("Unknown JweAlgorithm")
                 }
-
+                else -> throw IllegalArgumentException("Unknown JweAlgorithm")
             }
 
             val jvmVerifier =
@@ -141,10 +122,11 @@ class JwsServiceJvmTest : FreeSpec({
 
                 "Signed object from ext. library can be verified with int. library" {
                     val stringPayload = jsonSerializer.encodeToString(randomPayload)
-                    val libHeader = JWSHeader.Builder(JWSAlgorithm(algo.toJwsAlgorithm().map { it.identifier }.getOrThrow()))
-                        .type(JOSEObjectType("JWT"))
-                        .jwk(JWK.parse(cryptoService.jsonWebKey.serialize()))
-                        .build()
+                    val libHeader =
+                        JWSHeader.Builder(JWSAlgorithm(algo.toJwsAlgorithm().map { it.identifier }.getOrThrow()))
+                            .type(JOSEObjectType("JWT"))
+                            .jwk(JWK.parse(cryptoService.jsonWebKey.serialize()))
+                            .build()
                     val libObject = JWSObject(libHeader, Payload(stringPayload)).also {
                         it.sign(jvmSigner)
                     }
