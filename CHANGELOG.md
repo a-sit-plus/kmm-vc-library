@@ -1,5 +1,8 @@
 # Changelog
 
+Release 3.8.1:
+ - Update test dependencies
+
 Release 3.8.0:
  - Kotlin 2.0.0
  - Gradle 8.8
