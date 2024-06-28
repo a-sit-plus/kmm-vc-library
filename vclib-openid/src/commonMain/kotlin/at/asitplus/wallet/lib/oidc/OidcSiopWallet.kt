@@ -90,12 +90,18 @@ class OidcSiopWallet(
             return OidcSiopWallet(
                 holder = holder ?: HolderAgent(actualKeyPairAdapter),
                 agentPublicKey = actualKeyPairAdapter.publicKey,
-                jwsService = jwsService ?: DefaultJwsService(DefaultCryptoService(actualKeyPairAdapter)),
+                jwsService = jwsService ?: DefaultJwsService(
+                    DefaultCryptoService(
+                        actualKeyPairAdapter
+                    )
+                ),
                 clock = clock ?: Clock.System,
                 clientId = clientId ?: "https://wallet.a-sit.at/",
                 remoteResourceRetriever = remoteResourceRetriever ?: { null },
-                requestObjectJwsVerifier = requestObjectJwsVerifier ?: RequestObjectJwsVerifier { jws, authnRequest -> true },
-                scopePresentationDefinitionRetriever = scopePresentationDefinitionRetriever ?: { null },
+                requestObjectJwsVerifier = requestObjectJwsVerifier
+                    ?: RequestObjectJwsVerifier { jws, authnRequest -> true },
+                scopePresentationDefinitionRetriever = scopePresentationDefinitionRetriever
+                    ?: { null },
             )
         }
     }
@@ -276,6 +282,36 @@ class OidcSiopWallet(
         if (!isValidSubmission) {
             Napier.w("submission requirements are not satisfied")
             throw OAuth2Exception(Errors.USER_CANCELLED)
+        }
+
+        credentialSubmissions.map { submission ->
+            val inputDescriptor = presentationDefinition.inputDescriptors.firstOrNull {
+                it.id == submission.key
+            } ?: run {
+                Napier.w("Invalid input descriptor id")
+                throw OAuth2Exception(Errors.USER_CANCELLED)
+            }
+
+            val constraintFields = holder.evaluateInputDescriptorAgainstCredential(
+                inputDescriptor,
+                submission.value.credential,
+                fallbackFormatHolder = presentationDefinition.formats ?: clientMetadata?.vpFormats,
+                pathAuthorizationValidator = { true },
+            ).getOrThrow()
+
+            constraintFields.filter {
+                it.key.optional != true
+            }.forEach { constraintField ->
+                val allowedPaths = constraintField.value.map {
+                    it.normalizedJsonPath.toString()
+                }
+                submission.value.disclosedAttributes.firstOrNull {
+                    allowedPaths.contains(it.toString())
+                } ?: run {
+                    Napier.w("Input descriptor constraints not satisfied: ${inputDescriptor.id}.${constraintField.key.id?.let { " Missing field: $it" }}")
+                    throw OAuth2Exception(Errors.USER_CANCELLED)
+                }
+            }
         }
 
         return holder.createPresentation(

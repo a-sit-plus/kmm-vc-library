@@ -68,46 +68,49 @@ class HolderAgent(
      *
      * Note: Revocation credentials should not be stored, but set with [setRevocationList].
      */
-    override suspend fun storeCredential(credential: Holder.StoreCredentialInput)
-            : KmmResult<Holder.StoredCredential> = catching {
-        when (credential) {
-            is Holder.StoreCredentialInput.Vc -> {
-                val vc = validator.verifyVcJws(credential.vcJws, keyPair.publicKey)
-                if (vc !is Verifier.VerifyCredentialResult.SuccessJwt) {
-                    throw VerificationError(vc.toString())
-                }
-                subjectCredentialStore.storeCredential(vc.jws, credential.vcJws, credential.scheme)
-                    .toStoredCredential()
-            }
-
-            is Holder.StoreCredentialInput.SdJwt -> {
-                val sdJwt = validator.verifySdJwt(credential.vcSdJwt, keyPair.publicKey)
-                if (sdJwt !is Verifier.VerifyCredentialResult.SuccessSdJwt) {
-                    throw VerificationError(sdJwt.toString())
-                }
-                subjectCredentialStore.storeCredential(
-                    sdJwt.sdJwt,
-                    credential.vcSdJwt,
-                    sdJwt.disclosures,
-                    credential.scheme,
-                ).toStoredCredential()
-            }
-
-            is Holder.StoreCredentialInput.Iso -> {
-                val issuerKey: CoseKey? = credential.issuerSigned.issuerAuth.unprotectedHeader?.certificateChain
-                    ?.let {
-                        runCatching { X509Certificate.decodeFromDer(it) }.getOrNull()
-                            ?.publicKey?.toCoseKey()?.getOrNull()
+    override suspend fun storeCredential(credential: Holder.StoreCredentialInput): KmmResult<Holder.StoredCredential> =
+        catching {
+            when (credential) {
+                is Holder.StoreCredentialInput.Vc -> {
+                    val vc = validator.verifyVcJws(credential.vcJws, keyPair.publicKey)
+                    if (vc !is Verifier.VerifyCredentialResult.SuccessJwt) {
+                        throw VerificationError(vc.toString())
                     }
-                val iso = validator.verifyIsoCred(credential.issuerSigned, issuerKey)
-                if (iso !is Verifier.VerifyCredentialResult.SuccessIso) {
-                    throw VerificationError(iso.toString())
+                    subjectCredentialStore.storeCredential(
+                        vc.jws,
+                        credential.vcJws,
+                        credential.scheme
+                    ).toStoredCredential()
                 }
-                subjectCredentialStore.storeCredential(iso.issuerSigned, credential.scheme)
-                    .toStoredCredential()
+
+                is Holder.StoreCredentialInput.SdJwt -> {
+                    val sdJwt = validator.verifySdJwt(credential.vcSdJwt, keyPair.publicKey)
+                    if (sdJwt !is Verifier.VerifyCredentialResult.SuccessSdJwt) {
+                        throw VerificationError(sdJwt.toString())
+                    }
+                    subjectCredentialStore.storeCredential(
+                        sdJwt.sdJwt,
+                        credential.vcSdJwt,
+                        sdJwt.disclosures,
+                        credential.scheme,
+                    ).toStoredCredential()
+                }
+
+                is Holder.StoreCredentialInput.Iso -> {
+                    val issuerKey: CoseKey? =
+                        credential.issuerSigned.issuerAuth.unprotectedHeader?.certificateChain?.let {
+                            runCatching { X509Certificate.decodeFromDer(it) }.getOrNull()?.publicKey?.toCoseKey()
+                                ?.getOrNull()
+                        }
+                    val iso = validator.verifyIsoCred(credential.issuerSigned, issuerKey)
+                    if (iso !is Verifier.VerifyCredentialResult.SuccessIso) {
+                        throw VerificationError(iso.toString())
+                    }
+                    subjectCredentialStore.storeCredential(iso.issuerSigned, credential.scheme)
+                        .toStoredCredential()
+                }
             }
         }
-    }
 
 
     /**
@@ -118,20 +121,25 @@ class HolderAgent(
      */
     override suspend fun getCredentials(): Collection<Holder.StoredCredential>? {
         val credentials = subjectCredentialStore.getCredentials().getOrNull()
-            ?: return null
-                .also { Napier.w("Got no credentials from subjectCredentialStore") }
+            ?: return null.also { Napier.w("Got no credentials from subjectCredentialStore") }
         return credentials.map { it.toStoredCredential() }
     }
 
     private fun SubjectCredentialStore.StoreEntry.toStoredCredential() = when (this) {
-        is SubjectCredentialStore.StoreEntry.Iso ->
-            Holder.StoredCredential.Iso(this, Validator.RevocationStatus.UNKNOWN)
+        is SubjectCredentialStore.StoreEntry.Iso -> Holder.StoredCredential.Iso(
+            this,
+            Validator.RevocationStatus.UNKNOWN
+        )
 
-        is SubjectCredentialStore.StoreEntry.Vc ->
-            Holder.StoredCredential.Vc(this, validator.checkRevocationStatus(vc))
+        is SubjectCredentialStore.StoreEntry.Vc -> Holder.StoredCredential.Vc(
+            this,
+            validator.checkRevocationStatus(vc)
+        )
 
-        is SubjectCredentialStore.StoreEntry.SdJwt ->
-            Holder.StoredCredential.SdJwt(this, validator.checkRevocationStatus(sdJwt))
+        is SubjectCredentialStore.StoreEntry.SdJwt -> Holder.StoredCredential.SdJwt(
+            this,
+            validator.checkRevocationStatus(sdJwt)
+        )
     }
 
     /**
@@ -253,35 +261,39 @@ class HolderAgent(
             evaluateInputDescriptorAgainstCredential(
                 inputDescriptor = inputDescriptor,
                 credential = credential,
-                presentationDefinitionFormatHolder = fallbackFormatHolder,
+                fallbackFormatHolder = fallbackFormatHolder,
                 pathAuthorizationValidator = {
                     pathAuthorizationValidator?.invoke(credential, it) ?: true
                 },
-            )?.let {
+            ).getOrNull()?.let {
                 credential to it
             }
         }.toMap()
+    }.mapKeys {
+        it.key.id
     }
 
-    private fun evaluateInputDescriptorAgainstCredential(
+    override fun evaluateInputDescriptorAgainstCredential(
         inputDescriptor: InputDescriptor,
         credential: SubjectCredentialStore.StoreEntry,
-        presentationDefinitionFormatHolder: FormatHolder?,
+        fallbackFormatHolder: FormatHolder?,
         pathAuthorizationValidator: (NormalizedJsonPath) -> Boolean,
-    ) = listOf(credential).filter {
-        it.isFormatSupported(inputDescriptor.format ?: presentationDefinitionFormatHolder)
-    }.filter {
-        // iso credentials now have their doctype encoded into the id
-        when (it) {
-            is SubjectCredentialStore.StoreEntry.Iso -> it.scheme.isoDocType == inputDescriptor.id
-            else -> true
+    ) = catching {
+        listOf(credential).filter {
+            it.isFormatSupported(inputDescriptor.format ?: fallbackFormatHolder)
+        }.filter {
+            // iso credentials now have their doctype encoded into the id
+            when (it) {
+                is SubjectCredentialStore.StoreEntry.Iso -> it.scheme.isoDocType == inputDescriptor.id
+                else -> true
+            }
+        }.firstNotNullOf {
+            difInputEvaluator.evaluateConstraintFieldMatches(
+                inputDescriptor = inputDescriptor,
+                credential = CredentialToJsonConverter.toJsonElement(it),
+                pathAuthorizationValidator = pathAuthorizationValidator,
+            ).getOrThrow()
         }
-    }.firstNotNullOfOrNull {
-        difInputEvaluator.evaluateConstraintFieldMatches(
-            inputDescriptor = inputDescriptor,
-            credential = CredentialToJsonConverter.toJsonElement(it),
-            pathAuthorizationValidator = pathAuthorizationValidator,
-        ).getOrNull()
     }
 
     /** assume credential format to be supported by the verifier if no format holder is specified */
