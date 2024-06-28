@@ -85,9 +85,9 @@ class OidcSiopWallet(
             remoteResourceRetriever: RemoteResourceRetrieverFunction? = null,
             requestObjectJwsVerifier: RequestObjectJwsVerifier? = null,
             scopePresentationDefinitionRetriever: ScopePresentationDefinitionRetriever? = null,
-        ) {
+        ): OidcSiopWallet {
             val actualKeyPairAdapter = keyPairAdapter ?: RandomKeyPairAdapter()
-            OidcSiopWallet(
+            return OidcSiopWallet(
                 holder = holder ?: HolderAgent(actualKeyPairAdapter),
                 agentPublicKey = actualKeyPairAdapter.publicKey,
                 jwsService = jwsService ?: DefaultJwsService(DefaultCryptoService(actualKeyPairAdapter)),
