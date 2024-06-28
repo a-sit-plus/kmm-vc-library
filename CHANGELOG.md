@@ -16,6 +16,11 @@ Release 4.0.0:
  - Add return types to function calls to `SubjectCredentialStore`
  - Change from list to single credential in parameter for `Holder.storeCredentials()`, changing name to `storeCredential()`
  - Add `AuthenticationResponseFactory`: Builds an authentication response from request and response parameters
+ - Change `OidcSiopWallet`: 
+   - Add `startAuthorizationResponsePreparation`: Gathers data necessary for presentation building and yields a `AuthorizationResponsePreparationState`
+   - Add `finalizeAuthorizationResponseParameters`: Does what `createAuthenticationParams` did before 
+ - Add `AuthorizationResponsePreparationState`: Holds data necessary for presentation building
+ - Add `AuthenticationRequestParser`: Extracted presentation request logic from `OidcSiopWallet` and put it here
 
 Release 3.8.0:
  - Kotlin 2.0.0
