@@ -18,7 +18,6 @@ import at.asitplus.wallet.lib.data.dif.PresentationDefinition
 import at.asitplus.wallet.lib.data.dif.PresentationSubmission
 import at.asitplus.wallet.lib.data.dif.PresentationSubmissionDescriptor
 import at.asitplus.wallet.lib.data.dif.PresentationSubmissionValidator
-import at.asitplus.wallet.lib.iso.IssuerSigned
 import at.asitplus.wallet.lib.jws.DefaultJwsService
 import at.asitplus.wallet.lib.jws.JwsService
 import com.benasher44.uuid.uuid4
@@ -191,7 +190,7 @@ class HolderAgent(
         challenge: String,
         audienceId: String,
         presentationDefinitionId: String?,
-        presentationSubmissionSelection: Map<String, InputDescriptorCredentialSubmission>,
+        presentationSubmissionSelection: Map<String, CredentialSubmission>,
     ): KmmResult<Holder.PresentationResponseParameters> = runCatching {
         val submissionList = presentationSubmissionSelection.toList()
         val presentationSubmission = PresentationSubmission.fromMatches(
@@ -297,7 +296,7 @@ class HolderAgent(
 
     private fun PresentationSubmission.Companion.fromMatches(
         presentationId: String?,
-        matches: List<Pair<String, InputDescriptorCredentialSubmission>>,
+        matches: List<Pair<String, CredentialSubmission>>,
     ) = PresentationSubmission(
         id = uuid4().toString(),
         definitionId = presentationId,

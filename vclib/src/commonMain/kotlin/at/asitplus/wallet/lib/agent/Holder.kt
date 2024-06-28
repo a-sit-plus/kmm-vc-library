@@ -14,7 +14,7 @@ import at.asitplus.wallet.lib.iso.IssuerSigned
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class InputDescriptorCredentialSubmission(
+data class CredentialSubmission(
     val credential: SubjectCredentialStore.StoreEntry,
     val disclosedAttributes: Collection<NormalizedJsonPath>,
 )
@@ -139,7 +139,7 @@ interface Holder {
         challenge: String,
         audienceId: String,
         presentationDefinitionId: String?,
-        presentationSubmissionSelection: Map<String, InputDescriptorCredentialSubmission>,
+        presentationSubmissionSelection: Map<String, CredentialSubmission>,
     ): KmmResult<PresentationResponseParameters>
 
     /**
@@ -182,7 +182,7 @@ interface Holder {
 fun Map<InputDescriptor, Map<SubjectCredentialStore.StoreEntry, Map<ConstraintField, NodeList>>>.toDefaultSubmission() =
     mapNotNull { descriptorCredentialMatches ->
         descriptorCredentialMatches.value.entries.firstNotNullOfOrNull { credentialConstraintFieldMatches ->
-            InputDescriptorCredentialSubmission(
+            CredentialSubmission(
                 credential = credentialConstraintFieldMatches.key,
                 disclosedAttributes = credentialConstraintFieldMatches.value.values.mapNotNull {
                     it.firstOrNull()?.normalizedJsonPath
