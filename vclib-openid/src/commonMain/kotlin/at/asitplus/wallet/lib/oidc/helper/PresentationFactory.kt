@@ -128,8 +128,8 @@ internal class PresentationFactory(
             throw OAuth2Exception(Errors.USER_CANCELLED)
         }
 
-        credentialSubmissions.map { submission ->
-            // making sure, that all the submissions actually match the input descriptor requirements
+        // making sure, that all the submissions actually match the corresponding input descriptor requirements
+        credentialSubmissions.forEach { submission ->
             val inputDescriptor = this.inputDescriptors.firstOrNull {
                 it.id == submission.key
             } ?: run {
@@ -137,26 +137,35 @@ internal class PresentationFactory(
                 throw OAuth2Exception(Errors.USER_CANCELLED)
             }
 
-            val constraintFields = holder.evaluateInputDescriptorAgainstCredential(
+            val constraintFieldMatches = holder.evaluateInputDescriptorAgainstCredential(
                 inputDescriptor,
                 submission.value.credential,
                 fallbackFormatHolder = this.formats ?: clientMetadata?.vpFormats,
                 pathAuthorizationValidator = { true },
             ).getOrThrow()
 
-            constraintFields.filter {
+            val disclosedAttributes = submission.value.disclosedAttributes.map {
+                it.toString()
+            }
+
+            // find a matching path for each constraint field
+            constraintFieldMatches.filter {
+                // only need to validate non-optional constraint fields
                 it.key.optional != true
             }.forEach { constraintField ->
                 val allowedPaths = constraintField.value.map {
                     it.normalizedJsonPath.toString()
                 }
-                submission.value.disclosedAttributes.firstOrNull {
-                    allowedPaths.contains(it.toString())
+                disclosedAttributes.firstOrNull {
+                    allowedPaths.contains(it)
                 } ?: run {
                     Napier.w("Input descriptor constraints not satisfied: ${inputDescriptor.id}.${constraintField.key.id?.let { " Missing field: $it" }}")
                     throw OAuth2Exception(Errors.USER_CANCELLED)
                 }
             }
+
+            // TODO: maybe we also want to validate, whether there are any redundant disclosed attributes?
+            //  this would be the case if there is only one constraint field with path "$['name']", but two attributes are disclosed
         }
 
     }
