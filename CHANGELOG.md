@@ -18,9 +18,13 @@ Release 4.0.0:
  - Add `AuthenticationResponseFactory`: Builds an authentication response from request and response parameters
  - Change `OidcSiopWallet`: 
    - Add `startAuthorizationResponsePreparation`: Gathers data necessary for presentation building and yields a `AuthorizationResponsePreparationState`
-   - Add `finalizeAuthorizationResponseParameters`: Does what `createAuthenticationParams` did before 
+   - Add `finalizeAuthorizationResponseParameters`: Returns what `createAuthenticationParams` returned before, but also takes in `AuthorizationResponsePreparationState` and an optional non-default submission
+   - Add `finalizeAuthorizationResponse`: Returns what `createAuthenticationResponse` did before 
  - Add `AuthorizationResponsePreparationState`: Holds data necessary for presentation building
- - Add `AuthenticationRequestParser`: Extracted presentation request logic from `OidcSiopWallet` and put it here
+ - Add `AuthenticationRequestParser`: Extracted presentation request parsing logic from `OidcSiopWallet` and put it here
+ - Add `AuthorizationRequestValidator`: Extracted presentation request validation logic from `OidcSiopWallet` and put it here
+ - Add `PresentationFactory`: Extracted presentation response building logic from `OidcSiopWallet` and put it here
+   - Also added some code for presentation submission validation
 
 Release 3.8.0:
  - Kotlin 2.0.0

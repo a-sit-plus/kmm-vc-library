@@ -87,8 +87,7 @@ class OidcSiopCombinedProtocolTwoStepTest : FreeSpec({
                 )
             }
             val preparationState = holderSiop.startAuthorizationResponsePreparation(
-                holderSiop.parseAuthenticationRequestParameters(authnRequest.serialize())
-                    .getOrThrow()
+                authnRequest.serialize()
             ).getOrThrow()
 
             val presentationDefinition = preparationState.presentationDefinition

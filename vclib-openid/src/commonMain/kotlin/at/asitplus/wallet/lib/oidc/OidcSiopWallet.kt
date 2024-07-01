@@ -161,7 +161,18 @@ class OidcSiopWallet(
     }
 
     /**
-     * Creates the authentication response from the RP's [params]
+     * Starts the authorization response building process from the RP's [params]
+     */
+    suspend fun startAuthorizationResponsePreparation(
+        input: String,
+    ): KmmResult<AuthorizationResponsePreparationState> = catching {
+        startAuthorizationResponsePreparation(
+            parseAuthenticationRequestParameters(input).getOrThrow()
+        ).getOrThrow()
+    }
+
+    /**
+     * Starts the authorization response building process from the RP's [params]
      */
     suspend fun startAuthorizationResponsePreparation(
         params: AuthenticationRequestParametersFrom<*>
@@ -177,11 +188,18 @@ class OidcSiopWallet(
         )
     }
 
+    /**
+     * Finalize the authorization response
+     *
+     * @param request: the RP's [params]
+     * @param preparationState: The preparation state from [startAuthorizationResponsePreparation]
+     * @param inputDescriptorSubmissions: Map from input descriptor ids to [CredentialSubmission]
+     */
     suspend fun finalizeAuthorizationResponse(
         request: AuthenticationRequestParametersFrom<*>,
         preparationState: AuthorizationResponsePreparationState,
         inputDescriptorSubmissions: Map<String, CredentialSubmission>? = null,
-    ) = catching {
+    ): KmmResult<AuthenticationResponseResult> = catching {
         val responseParameters = finalizeAuthorizationResponseParameters(
             params = request,
             preparationState = preparationState,
@@ -193,11 +211,19 @@ class OidcSiopWallet(
         )
     }
 
+
+    /**
+     * Finalize the authorization response parameters
+     *
+     * @param request: the RP's [params]
+     * @param preparationState: The preparation state from [startAuthorizationResponsePreparation]
+     * @param inputDescriptorSubmissions: Map from input descriptor ids to [CredentialSubmission]
+     */
     suspend fun finalizeAuthorizationResponseParameters(
         params: AuthenticationRequestParametersFrom<*>,
         preparationState: AuthorizationResponsePreparationState,
         inputDescriptorSubmissions: Map<String, CredentialSubmission>? = null,
-    ) = preparationState.catching {
+    ): KmmResult<AuthenticationResponse> = preparationState.catching {
         val certKey =
             (params as? AuthenticationRequestParametersFrom.JwsSigned)?.source?.header?.certificateChain?.firstOrNull()?.publicKey?.toJsonWebKey()
         val clientJsonWebKeySet = clientMetadata?.loadJsonWebKeySet()
